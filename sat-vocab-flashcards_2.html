@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAT Vocabulary Flashcards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#efe8d8;
+    --paper-2:#e7ddc8;
+    --card:#fbf8f0;
+    --ink:#2c2823;
+    --ink-soft:#6a6354;
+    --ink-faint:#9a917e;
+    --accent:#b5612f;
+    --accent-deep:#8f4a22;
+    --known:#5c7150;
+    --known-soft:#e6ecdd;
+    --learning:#bb8526;
+    --learning-soft:#f5ead0;
+    --line:rgba(44,40,35,.14);
+    --shadow:rgba(44,40,35,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"DM Sans",system-ui,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(181,97,47,.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(92,113,80,.12), transparent 55%),
+      var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 18px 60px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{width:100%;max-width:680px}
+
+  /* ---- Header ---- */
+  header{margin-bottom:18px}
+  .eyebrow{
+    font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--accent);font-weight:700;margin-bottom:6px;
+  }
+  h1{
+    font-family:"Fraunces",serif;font-weight:900;font-size:clamp(30px,7vw,46px);
+    line-height:1;letter-spacing:-.02em;
+  }
+  h1 em{font-style:italic;font-weight:500;color:var(--accent-deep)}
+  .sub{color:var(--ink-soft);font-size:14px;margin-top:8px}
+
+  /* ---- Progress bar ---- */
+  .progress-wrap{margin:18px 0 14px}
+  .bar{
+    height:10px;border-radius:99px;background:var(--paper-2);
+    overflow:hidden;display:flex;border:1px solid var(--line);
+  }
+  .bar .seg{height:100%;transition:width .5s cubic-bezier(.4,0,.2,1)}
+  .bar .seg.known{background:var(--known)}
+  .bar .seg.learning{background:var(--learning)}
+  .legend{
+    display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;
+    font-size:13px;color:var(--ink-soft);font-weight:500;
+  }
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:9px;height:9px;border-radius:99px;display:inline-block}
+  .dot.known{background:var(--known)}
+  .dot.learning{background:var(--learning)}
+  .dot.new{background:var(--ink-faint)}
+
+  /* ---- Filters ---- */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+  .chip{
+    border:1px solid var(--line);background:transparent;color:var(--ink-soft);
+    padding:7px 14px;border-radius:99px;font-family:inherit;font-size:13px;
+    font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap;
+  }
+  .chip:hover{border-color:var(--ink-soft);color:var(--ink)}
+  .chip.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .chip .n{opacity:.6;margin-left:4px;font-variant-numeric:tabular-nums}
+
+  /* ---- Card ---- */
+  .stage{perspective:1600px;margin-bottom:18px}
+  .card{
+    position:relative;width:100%;min-height:340px;cursor:pointer;
+    transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,.05,.2,1);
+  }
+  .card.flipped{transform:rotateY(180deg)}
+  .face{
+    position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    background:var(--card);border-radius:22px;border:1px solid var(--line);
+    box-shadow:0 22px 44px -22px var(--shadow), 0 2px 0 rgba(255,255,255,.5) inset;
+    padding:34px 32px;display:flex;flex-direction:column;
+  }
+  .face.back{transform:rotateY(180deg)}
+  .corner{
+    position:absolute;top:18px;left:20px;font-family:"Fraunces",serif;
+    font-style:italic;font-size:15px;color:var(--ink-faint);
+  }
+  .status-badge{
+    position:absolute;top:18px;right:18px;font-size:11px;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;padding:5px 11px;border-radius:99px;
+    background:var(--paper-2);color:var(--ink-soft);
+  }
+  .status-badge.known{background:var(--known-soft);color:var(--known)}
+  .status-badge.learning{background:var(--learning-soft);color:var(--learning)}
+
+  /* front */
+  .front .word{
+    margin:auto 0;font-family:"Fraunces",serif;font-weight:900;
+    font-size:clamp(38px,11vw,68px);line-height:1.02;letter-spacing:-.03em;
+    text-align:center;word-break:break-word;
+  }
+  .flip-hint{
+    text-align:center;font-size:12.5px;color:var(--ink-faint);
+    letter-spacing:.04em;display:flex;align-items:center;justify-content:center;gap:7px;
+  }
+  .flip-hint svg{width:15px;height:15px;opacity:.7}
+
+  /* back */
+  .back-inner{margin:auto 0;overflow-y:auto;max-height:280px;width:100%}
+  .back .term{
+    font-family:"Fraunces",serif;font-weight:600;font-size:24px;
+    letter-spacing:-.01em;margin-bottom:14px;
+  }
+  .label{
+    font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:5px;
+  }
+  .def{font-size:18px;line-height:1.5;margin-bottom:18px}
+  .ex{
+    font-family:"Fraunces",serif;font-style:italic;font-size:17px;line-height:1.55;
+    color:var(--ink-soft);padding-left:14px;border-left:3px solid var(--learning);
+  }
+
+  /* ---- Controls ---- */
+  .judge{display:flex;gap:12px;margin-bottom:14px}
+  .judge button{
+    flex:1;padding:15px;border-radius:14px;font-family:inherit;font-weight:700;
+    font-size:15px;cursor:pointer;border:1.5px solid;transition:all .15s;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .btn-learning{background:var(--learning-soft);color:var(--learning);border-color:rgba(187,133,38,.35)}
+  .btn-learning:hover{background:var(--learning);color:#fff;transform:translateY(-1px)}
+  .btn-known{background:var(--known-soft);color:var(--known);border-color:rgba(92,113,80,.35)}
+  .btn-known:hover{background:var(--known);color:#fff;transform:translateY(-1px)}
+  .judge button .k{font-size:11px;opacity:.55;font-weight:600}
+
+  .nav{display:flex;align-items:center;gap:12px}
+  .nav button{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    width:50px;height:50px;cursor:pointer;color:var(--ink);
+    display:flex;align-items:center;justify-content:center;transition:all .15s;
+  }
+  .nav button:hover{border-color:var(--ink-soft);transform:translateY(-1px)}
+  .nav button svg{width:20px;height:20px}
+  .counter{
+    flex:1;text-align:center;font-weight:600;font-variant-numeric:tabular-nums;
+    color:var(--ink-soft);font-size:15px;
+  }
+  .counter b{color:var(--ink);font-size:17px}
+  .icon-btn{font-size:18px}
+
+  .footer-row{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-top:22px;font-size:13px;color:var(--ink-faint);
+  }
+  .footer-row button{
+    background:none;border:none;color:var(--ink-faint);font-family:inherit;
+    font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;
+  }
+  .footer-row button:hover{color:var(--accent)}
+  kbd{
+    font-family:"DM Sans",sans-serif;background:var(--paper-2);border:1px solid var(--line);
+    border-radius:5px;padding:1px 6px;font-size:11px;font-weight:600;color:var(--ink-soft);
+  }
+  .kbd-hint{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+  /* empty / loading */
+  .empty{
+    text-align:center;padding:60px 20px;color:var(--ink-soft);
+    background:var(--card);border-radius:22px;border:1px dashed var(--line);
+  }
+  .empty .big{font-family:"Fraunces",serif;font-size:30px;color:var(--ink);margin-bottom:8px}
+  .saving{font-size:12px;color:var(--ink-faint);transition:opacity .3s;opacity:0}
+  .saving.show{opacity:1}
+
+  @media (max-width:520px){
+    .face{padding:28px 22px}
+    .judge button{padding:13px;font-size:14px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">SAT Prep · 126 words</div>
+    <h1>Vocabulary <em>flashcards</em></h1>
+    <div class="sub">Tap a card to flip it. Mark each word <b>Got it</b> or <b>Still learning</b> — your progress is saved automatically.</div>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="bar">
+      <div class="seg known" id="segKnown" style="width:0"></div>
+      <div class="seg learning" id="segLearning" style="width:0"></div>
+    </div>
+    <div class="legend">
+      <span><i class="dot known"></i> Got it <b id="cKnown">0</b></span>
+      <span><i class="dot learning"></i> Still learning <b id="cLearning">0</b></span>
+      <span><i class="dot new"></i> Not reviewed <b id="cNew">0</b></span>
+    </div>
+  </div>
+
+  <div class="filters" id="filters"></div>
+
+  <div id="deck">
+    <div class="stage">
+      <div class="card" id="card">
+        <div class="face front">
+          <div class="corner" id="frontIndex"></div>
+          <div class="status-badge" id="frontBadge">New</div>
+          <div class="word" id="word">—</div>
+          <div class="flip-hint">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9" stroke-linecap="round"/><path d="M3 4v5h5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            tap to reveal · <kbd>space</kbd>
+          </div>
+        </div>
+        <div class="face back">
+          <div class="corner">definition</div>
+          <div class="status-badge" id="backBadge">New</div>
+          <div class="back-inner">
+            <div class="term" id="termBack">—</div>
+            <div class="label">Meaning</div>
+            <div class="def" id="def">—</div>
+            <div class="label">In context</div>
+            <div class="ex" id="ex">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="judge">
+      <button class="btn-learning" id="btnLearning">Still learning <span class="k">[1]</span></button>
+      <button class="btn-known" id="btnKnown">Got it <span class="k">[2]</span></button>
+    </div>
+
+    <div class="nav">
+      <button id="prev" title="Previous (←)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="counter"><b id="posNow">1</b> / <span id="posTotal">78</span></div>
+      <button id="shuffle" class="icon-btn" title="Shuffle">⤮</button>
+      <button id="next" title="Next (→)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="footer-row">
+    <div class="kbd-hint"><kbd>←</kbd><kbd>→</kbd> move · <kbd>1</kbd>/<kbd>2</kbd> mark</div>
+    <div style="display:flex;gap:14px;align-items:center">
+      <span class="saving" id="saving">saved ✓</span>
+      <button id="reset">Reset progress</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CARDS = [
+  {w:"barren", d:"not interesting or attractive; infertile", e:"The sports hall was a rather barren concrete building."},
+  {w:"peril", d:"great danger", e:"They put their own lives in peril to rescue their friends."},
+  {w:"accentuate", d:"emphasize; nhấn mạnh, làm nổi bật", e:"The photograph seemed to accentuate his large nose."},
+  {w:"repudiate", d:"reject; bác bỏ", e:"He repudiated all offers of friendship."},
+  {w:"convolute", d:"complicated; khó hiểu", e:"Long paragraphs and convoluted sentences."},
+  {w:"sovereignty", d:"complete freedom / supreme authority; sự tự do, chủ quyền", e:"Spain's claim of sovereignty over the territory."},
+  {w:"eccentric", d:"unusual, strange; dị", e:"His eccentric behavior lost him his job."},
+  {w:"meager", d:"too small in amount; nhỏ, ít", e:"A school with meager resources."},
+  {w:"imperative", d:"urgent, of vital importance; quan trọng, cấp thiết", e:"It is imperative that politicians should be good communicators."},
+  {w:"adept", d:"skilful; giỏi", e:"Many are highly adept at adding up their calorie intake."},
+  {w:"disseminate", d:"spread information widely; lan truyền, tuyên truyền", e:"Her findings have been widely disseminated."},
+  {w:"circumvent", d:"avoid, go around; né tránh, đi đường vòng", e:"We went north in order to circumvent the mountains."},
+  {w:"corroborate", d:"provide evidence to support a statement/idea; ủng hộ, xác nhận", e:"Experiments elsewhere corroborate these results."},
+  {w:"conspicuous", d:"easy to notice, apparent", e:"A bird with conspicuous white markings."},
+  {w:"efficacy", d:"effectiveness; hiệu quả", e:"The efficacy of this drug has yet to be tested."},
+  {w:"rectify", d:"to correct, put right; sửa lỗi sai", e:"A number of steps have been taken to rectify the error."},
+  {w:"nebulous", d:"unclear, vague", e:"'Normality' is rather a nebulous concept."},
+  {w:"pervasive", d:"existing everywhere; phổ biến", e:"The pervasive influence of television."},
+  {w:"erratic", d:"irregular, not following a pattern; bất thường", e:"His breathing was becoming erratic."},
+  {w:"equivocal", d:"ambiguous, open to two meanings; không rõ ràng", e:"His answer was equivocal."},
+  {w:"predecessor", d:"the one that came before; tiền nhiệm, tiền thân", e:"These new assistants are more intelligent than their predecessor."},
+  {w:"sporadic", d:"occurring at irregular intervals; occasional, scattered — xảy ra rải rác, không đều", e:"There has been sporadic violence downtown."},
+  {w:"preliminary", d:"happening before / preparatory; xảy ra trước", e:"A preliminary draft."},
+  {w:"desultory", d:"lacking a plan or purpose; aimless — rời rạc, không có mục đích", e:"A desultory conversation."},
+  {w:"veritable", d:"real, genuine — used to emphasize the existence of something; thực sự", e:"The male bird is a veritable rainbow of colors."},
+  {w:"assuage", d:"relieve, make less intense, ease", e:"Nothing could assuage his guilt."},
+  {w:"designate", d:"appoint / assign to a role; trao cho, giao cho", e:"She has been designated to take over the position of treasurer."},
+  {w:"amplify", d:"increase the effect or strength of", e:"These stories only amplified her fears."},
+  {w:"denounce", d:"publicly condemn / disapprove of; không đồng tình, lên án", e:"His music was denounced by many critics and musicians."},
+  {w:"scrutinize", d:"examine carefully and in detail; xem xét kỹ, quan sát kỹ", e:"He scrutinized the document."},
+  {w:"superfluous", d:"more than is needed, excessive; thừa", e:"A modern building with superfluous decoration."},
+  {w:"discern", d:"perceive or recognize clearly; nhận ra, nhìn rõ", e:"We could just discern a town in the distance."},
+  {w:"extirpate", d:"destroy completely, wipe out; tiêu diệt, phá huỷ", e:"Repeated attempts to extirpate it."},
+  {w:"remedy", d:"a solution / cure; giải quyết, phương thuốc", e:"A remedy for colds."},
+  {w:"subsequent", d:"happening after; xảy ra sau, ở đằng sau", e:"Subsequent pages of the book."},
+  {w:"juxtapose", d:"place side by side for comparison; đặt cạnh để so sánh", e:"Her bedroom juxtaposes antiques with modern furniture."},
+  {w:"spurious", d:"fake, false, insincere", e:"A spurious smile."},
+  {w:"recalcitrant", d:"uncooperative, refusing to obey; không hợp tác", e:"A recalcitrant student."},
+  {w:"earnest", d:"serious and sincere; nghiêm túc, chân thành", e:"A rather earnest young man."},
+  {w:"sanguine", d:"optimistic, hopeful; lạc quan", e:"Jody is not sanguine about the prospects."},
+  {w:"misanthropic", d:"disliking people, antisocial; unsociable", e:"A misanthropic drunken loner."},
+  {w:"illusory", d:"based on illusion; fake but seems real; ảo ảnh", e:"Signs of economic recovery may be illusory."},
+  {w:"ubiquitous", d:"present everywhere, very common; phổ biến", e:"Coffee shops are ubiquitous these days."},
+  {w:"hamper", d:"hinder, prevent; cản trở", e:"She tried to run, but was hampered by her heavy suitcase."},
+  {w:"shrewd", d:"clever, sharp-judging, wise", e:"Malcolm is a shrewd businessman."},
+  {w:"eradicate", d:"eliminate completely; loại bỏ, tiêu diệt", e:"We can eradicate this disease from the world."},
+  {w:"reciprocity", d:"mutual exchange; mutuality; sự qua lại, hợp tác", e:"The striking quality of these poems is their mutuality and reciprocity."},
+  {w:"fecund", d:"fertile, capable of producing; có thể sinh sản", e:"Fecund agricultural land."},
+  {w:"expediency", d:"doing what is convenient/practical (often over what is right); sự thuận tiện", e:"The potential for expediency in planning is vast."},
+  {w:"dwindle", d:"gradually become smaller; bé dần, ít dần", e:"His money had dwindled away."},
+  {w:"extricate", d:"free / extract from a difficulty; thoát khỏi, tách rời", e:"Firemen had to extricate the driver from the wreckage."},
+  {w:"adroit", d:"skillful, clever; khéo léo, giỏi", e:"The author adroitly blends the two genres."},
+  {w:"corollary", d:"a direct result or consequence; hệ quả", e:"Environmental improvement has been a corollary to economic growth."},
+  {w:"akin", d:"similar to, related; rất giống", e:"Something akin to panic overwhelmed him."},
+  {w:"semblance", d:"an outward appearance / resemblance of something; vẻ ngoài giống", e:"She was trying to get her thoughts back into some semblance of order."},
+  {w:"vindicate", d:"justify, prove right; giải thích, chứng minh đúng", e:"The decision to advertise has been vindicated by the fact that sales have grown."},
+  {w:"revolt", d:"rebellion; to rebel / refuse to obey; không tuân theo", e:"A revolt against authority."},
+  {w:"copious", d:"abundant, in large quantity; nhiều, số lượng lớn", e:"She listened to me and took copious notes."},
+  {w:"imposing", d:"grand and impressive; magnificent; lộng lẫy, gây ấn tượng", e:"An imposing sight."},
+  {w:"meticulous", d:"very careful and precise; cẩn thận, tỉ mỉ", e:"Their planning and preparation were meticulous."},
+  {w:"resonance", d:"special meaning or importance; sức vang", e:"His words will have resonance for many musicians."},
+  {w:"engender", d:"cause, give rise to; gây ra, tạo nên", e:"Relationships that engender trust in children."},
+  {w:"synopsis", d:"a summary; tóm tắt", e:"A synopsis of the play."},
+  {w:"supposition", d:"an assumption / uncertain belief; giả thiết", e:"The police are acting on the supposition that she took the money."},
+  {w:"agglomeration", d:"a cluster of things that don't seem to belong together; một tổ hợp", e:"Buildings in an agglomeration of styles."},
+  {w:"conjecture", d:"a guess or hypothesis; phỏng đoán", e:"My results show that this conjecture was correct."},
+  {w:"amorphous", d:"without a clear shape or form; shapeless; vô định hình", e:"These solids are said to be amorphous."},
+  {w:"convene", d:"come together / call a meeting; tập hợp", e:"A report by experts convened by the National Institutes of Health."},
+  {w:"augment", d:"increase, add to; tăng", e:"Any surplus was sold to augment their income."},
+  {w:"thesis", d:"a central idea or argument; luận điểm", e:"Their main thesis was that the rise in earnings was due to improvements in education."},
+  {w:"principally", d:"mainly, chiefly; chủ yếu", e:"The money is principally invested in stocks and shares."},
+  {w:"tribunal", d:"a court or panel of judgment; toà án, hội đồng xét xử", e:"He took his case to an industrial tribunal due to resume next week."},
+  {w:"monastery", d:"a building where monks live; tu viện", e:"To protect themselves they also determined to withdraw to a monastery."},
+  {w:"rid (of)", d:"free oneself from / get rid of; loại bỏ", e:"He struggled to rid himself of his fear."},
+  {w:"jurisprudence", d:"the theory or practice of law; luật học", e:"From the standpoint of mainstream jurisprudence the issue seems irreconcilable."},
+  {w:"incarcerate", d:"imprison; bắt giữ, giam cầm", e:"He spent 10 years incarcerated."},
+  {w:"discipline", d:"a field of study / academic branch; ngành học, lĩnh vực", e:"The study of climate change does not fall neatly within any single academic discipline."},
+  {w:"precipitously", d:"suddenly and dramatically; rất nhanh, đột ngột", e:"The population of otters declined precipitously."},
+  {w:"tentative", d:"uncertain, provisional, done without confidence; dự kiến, chưa chắc chắn", e:"I passed on my tentative conclusions to the police."},
+  {w:"myriad", d:"a very great number; a wide variety; vô số", e:"The myriad causes of homelessness."},
+  {w:"substantiate", d:"to prove / provide evidence for; chứng minh, xác minh", e:"I offered little evidence to substantiate my claim."},
+  {w:"epitomize", d:"be a perfect example of; điển hình cho", e:"This building epitomizes the spirit of the nineteenth century."},
+  {w:"agency", d:"the means / intervention by which something happens; sự giúp đỡ của ai đó", e:"I got into my dream university through the agency of my mentor."},
+  {w:"kindred", d:"similar in nature; related; tương đồng, cùng một loại", e:"In the then president, Sir Hugh Casson, he found a kindred spirit."},
+  {w:"digress", d:"go off topic, stray from the subject; lạc đề", e:"Do you mind if I digress for a moment?"},
+  {w:"sacrosanct", d:"too important or sacred to be changed; bất khả xâm phạm", e:"Weekends are sacrosanct in our family."},
+  {w:"equitable", d:"fair and equal; công bằng, ngang hàng", e:"An equitable distribution."},
+  {w:"exemplar", d:"a typical or ideal example; ví dụ điển hình", e:"I was becoming the very exemplar of the fool in love."},
+  {w:"harbinger", d:"a sign that something is going to happen soon; điềm báo", e:"These birds are considered to be the harbingers of doom."},
+  {w:"incongruity", d:"the state of being out of place or inconsistent; sự không phù hợp", e:"The incongruity of her situation struck Gina with unpleasant force."},
+  {w:"presumptuous", d:"too bold or forward; overstepping; hỗn, đường đột", e:"Would it be presumptuous of me to ask why you are so miserable?"},
+  {w:"customary", d:"normal, usual, traditional; thông thường", e:"In some cultures it is customary for the bride to wear white."},
+  {w:"placate", d:"calm someone's anger; soothe; xoa dịu", e:"These changes did little to placate the friend group."},
+  {w:"bestow", d:"give / confer (an honour, gift); ban cho, trao cho", e:"Honours bestowed on him by the Queen."},
+  {w:"satirize", d:"mock / ridicule to expose a truth; mỉa mai, châm biếm", e:"A play satirizing the fashion industry."},
+  {w:"commend", d:"praise formally; khen ngợi, ca ngợi", e:"The paper was highly commended in the UK Press Awards."},
+  {w:"acolyte", d:"a devoted follower or assistant; (also) one who assists in a religious service — người đi theo, người giúp lễ", e:"The services are very simple, with the priest celebrating and two acolytes serving."},
+  {w:"retroactive", d:"taking effect from a date in the past; có hiệu lực hồi tố", e:"A retroactive pay increase."},
+  {w:"immutable", d:"unchanging, that cannot be changed; bất biến", e:"This decision should not be seen as immutable."},
+  {w:"transpose", d:"swap / change the order or position of; đổi chỗ, hoán vị", e:"I had transposed the last two digits of her phone number."},
+  {w:"entail", d:"involve / necessarily require; kéo theo, bao gồm", e:"A new computer system entails a lot of re-training."},
+  {w:"stipulate", d:"demand or specify as a condition; quy định, yêu cầu", e:"Laws stipulate the maximum interest rate that banks can charge."},
+  {w:"decouple", d:"separate things that were linked; tách rời", e:"The government aims to decouple economic growth from environmental damage."},
+  {w:"predicate", d:"base or found (something) on; dựa trên, căn cứ vào", e:"The company's expansion was predicated on the assumption that sales would rise."},
+  {w:"solitary", d:"single, sole; done or existing alone; một mình, duy nhất", e:"The solitary goal of the match."},
+  {w:"facetious", d:"joking inappropriately about serious things; cợt nhả", e:"Facetious comments."},
+  {w:"coalesce", d:"come together to form one whole; hợp nhất, dính lại", e:"The particles coalesce."},
+  {w:"ameliorate", d:"make better, improve a bad situation; cải thiện", e:"It is not clear what can be done to ameliorate the situation."},
+  {w:"apprentice", d:"a person learning a trade; người học nghề, học việc", e:"An apprentice electrician."},
+  {w:"proponent", d:"a person who advocates something; người ủng hộ", e:"He has always been a strong proponent of women's rights."},
+  {w:"postulate", d:"suggest / assume as a basis; đặt giả thuyết", e:"It has been postulated that the condition is inherited."},
+  {w:"elicit", d:"draw out (a reaction, answer); khơi gợi, gợi ra", e:"The test uses pictures to elicit words from the child."},
+  {w:"forestall", d:"prevent by acting in advance; ngăn chặn trước", e:"A measure intended to forestall further attacks."},
+  {w:"belie", d:"give a false impression of; contradict; che giấu, làm hiểu sai", e:"Her pleasant manner belied her true character."},
+  {w:"tangential", d:"only slightly relevant, off to the side; lạc đề, ngoài lề", e:"The matter you raise is rather tangential to this discussion."},
+  {w:"collude", d:"cooperate secretly to do something dishonest; thông đồng, cấu kết", e:"Several customs officials have been accused of colluding with drug traffickers."},
+  {w:"attest", d:"provide proof of; testify; chứng minh, làm chứng", e:"Luxurious furnishings attested to the wealth of the owner."},
+  {w:"attrition", d:"a gradual wearing down or reduction; sự hao mòn", e:"Worse was expected as consumption picked up after the attrition of the war years."},
+  {w:"vigilance", d:"careful watchfulness; cảnh giác, dè chừng", e:"The need for increased police vigilance."},
+  {w:"cynical", d:"distrustful of others' motives; đa nghi, hoài nghi", e:"A cynical view of human nature."},
+  {w:"detract", d:"take away from the value or appeal of; làm giảm sức hấp dẫn", e:"Litter detracts from the appearance of the town."},
+  {w:"dogmatic", d:"asserting opinions as if they were facts; độc đoán, quyết đoán", e:"Her staff find her bossy and dogmatic."},
+  {w:"vacillate", d:"waver, keep changing one's mind; do dự, phân vân", e:"Her parents vacillated between different approaches to discipline."},
+  {w:"disingenuous", d:"insincere, not truly honest; thiếu chân thành", e:"Keeping the details of the tax changes vague is disingenuous."},
+  {w:"banal", d:"dull, unoriginal, lacking interest; nhạt nhẽo, tầm thường", e:"Conversations about the most banal subjects."},
+  {w:"innocuous", d:"harmless, not offensive; vô hại, an toàn", e:"An innocuous remark."}
+];
+
+const STORAGE_KEY = "sat-vocab-progress-v1";
+const hasStorage = typeof window !== "undefined" && window.storage && typeof window.storage.get === "function";
+
+let progress = {};        // word -> "known" | "learning"
+let order = [];           // array of indices into CARDS (current filtered view)
+let pos = 0;
+let filter = "all";
+let flipped = false;
+
+const $ = id => document.getElementById(id);
+
+async function loadProgress(){
+  if(!hasStorage) return;
+  try{
+    const r = await window.storage.get(STORAGE_KEY);
+    if(r && r.value) progress = JSON.parse(r.value);
+  }catch(e){ progress = {}; }
+}
+let saveTimer;
+async function saveProgress(){
+  if(hasStorage){
+    try{ await window.storage.set(STORAGE_KEY, JSON.stringify(progress)); }catch(e){}
+  }
+  const s = $("saving"); s.classList.add("show");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>s.classList.remove("show"), 1100);
+}
+
+function statusOf(i){ return progress[CARDS[i].w] || "new"; }
+
+function counts(){
+  let known=0, learning=0;
+  CARDS.forEach((c,i)=>{ const s=statusOf(i); if(s==="known")known++; else if(s==="learning")learning++; });
+  return {known, learning, neu: CARDS.length-known-learning};
+}
+
+function buildOrder(){
+  let idx = CARDS.map((_,i)=>i);
+  if(filter==="learning") idx = idx.filter(i=>statusOf(i)==="learning");
+  else if(filter==="known") idx = idx.filter(i=>statusOf(i)==="known");
+  else if(filter==="new") idx = idx.filter(i=>statusOf(i)==="new");
+  order = idx;
+  pos = 0;
+}
+
+const FILTERS = [
+  {key:"all", label:"All"},
+  {key:"learning", label:"Still learning"},
+  {key:"new", label:"Not reviewed"},
+  {key:"known", label:"Got it"}
+];
+
+function renderFilters(){
+  const c = counts();
+  const map = {all:CARDS.length, learning:c.learning, new:c.neu, known:c.known};
+  $("filters").innerHTML = FILTERS.map(f=>
+    `<button class="chip ${filter===f.key?'active':''}" data-f="${f.key}">${f.label}<span class="n">${map[f.key]}</span></button>`
+  ).join("");
+  $("filters").querySelectorAll(".chip").forEach(b=>{
+    b.onclick = ()=>{ filter = b.dataset.f; flipped=false; buildOrder(); render(); };
+  });
+}
+
+function renderStats(){
+  const c = counts(), t = CARDS.length;
+  $("segKnown").style.width = (c.known/t*100)+"%";
+  $("segLearning").style.width = (c.learning/t*100)+"%";
+  $("cKnown").textContent = c.known;
+  $("cLearning").textContent = c.learning;
+  $("cNew").textContent = c.neu;
+}
+
+function badgeFor(s){
+  if(s==="known") return {cls:"known", txt:"Got it"};
+  if(s==="learning") return {cls:"learning", txt:"Still learning"};
+  return {cls:"", txt:"New"};
+}
+
+function render(){
+  renderFilters();
+  renderStats();
+
+  if(order.length===0){
+    $("deck").querySelector(".stage").style.display="none";
+    $("deck").querySelector(".judge").style.display="none";
+    $("deck").querySelector(".nav").style.display="none";
+    if(!$("emptyBox")){
+      const e=document.createElement("div");
+      e.id="emptyBox"; e.className="empty";
+      e.innerHTML='<div class="big">Nothing here 🎉</div><div>No cards in this pile. Try another filter.</div>';
+      $("deck").appendChild(e);
+    }
+    return;
+  } else {
+    const eb=$("emptyBox"); if(eb) eb.remove();
+    $("deck").querySelector(".stage").style.display="";
+    $("deck").querySelector(".judge").style.display="";
+    $("deck").querySelector(".nav").style.display="";
+  }
+
+  if(pos>=order.length) pos=order.length-1;
+  if(pos<0) pos=0;
+
+  const i = order[pos];
+  const card = CARDS[i];
+  const s = statusOf(i);
+  const b = badgeFor(s);
+
+  // reset flip without animation when changing card
+  const cardEl = $("card");
+  cardEl.classList.toggle("flipped", flipped);
+
+  $("frontIndex").textContent = "№ " + (i+1);
+  $("word").textContent = card.w;
+  $("termBack").textContent = card.w;
+  $("def").textContent = card.d;
+  $("ex").textContent = "“" + card.e + "”";
+
+  ["frontBadge","backBadge"].forEach(id=>{
+    const el=$(id); el.className="status-badge "+b.cls; el.textContent=b.txt;
+  });
+
+  $("posNow").textContent = pos+1;
+  $("posTotal").textContent = order.length;
+}
+
+function flip(){ flipped=!flipped; $("card").classList.toggle("flipped", flipped); }
+
+function go(delta){
+  if(order.length===0) return;
+  flipped=false;
+  pos = (pos + delta + order.length) % order.length;
+  render();
+}
+
+function mark(status){
+  if(order.length===0) return;
+  const i = order[pos];
+  progress[CARDS[i].w] = status;
+  saveProgress();
+  // if current filter would exclude this card, the view changes; advance smartly
+  const filteredOut = (filter==="learning" && status!=="learning") ||
+                      (filter==="known" && status!=="known") ||
+                      (filter==="new");
+  if(filteredOut){
+    const keepPos = pos;
+    buildOrder();
+    pos = Math.min(keepPos, order.length-1);
+    flipped=false;
+    render();
+  } else {
+    renderStats(); renderFilters();
+    setTimeout(()=>go(1), 180);
+  }
+}
+
+function shuffle(){
+  for(let k=order.length-1;k>0;k--){ const j=Math.floor(Math.random()*(k+1)); [order[k],order[j]]=[order[j],order[k]]; }
+  pos=0; flipped=false; render();
+}
+
+// events
+$("card").onclick = flip;
+$("prev").onclick = ()=>go(-1);
+$("next").onclick = ()=>go(1);
+$("shuffle").onclick = shuffle;
+$("btnLearning").onclick = ()=>mark("learning");
+$("btnKnown").onclick = ()=>mark("known");
+$("reset").onclick = ()=>{
+  if(confirm("Reset all progress? This clears every Got it / Still learning mark.")){
+    progress={}; saveProgress(); filter="all"; flipped=false; buildOrder(); render();
+  }
+};
+
+document.addEventListener("keydown", e=>{
+  if(e.target.tagName==="INPUT") return;
+  if(e.code==="Space"){ e.preventDefault(); flip(); }
+  else if(e.code==="ArrowRight"){ go(1); }
+  else if(e.code==="ArrowLeft"){ go(-1); }
+  else if(e.key==="1"){ mark("learning"); }
+  else if(e.key==="2"){ mark("known"); }
+});
+
+(async function init(){
+  await loadProgress();
+  buildOrder();
+  render();
+})();
+</script>
+</body>
+</html>
